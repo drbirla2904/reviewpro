@@ -29,7 +29,13 @@ def review_landing(request, token):
     qr = get_object_or_404(QRCode, token=token, is_active=True)
     qr.scan_count += 1
     qr.save(update_fields=['scan_count'])
-    return render(request, 'reviews/review.html', {'qr': qr, 'business': qr.business})
+    from .template_themes import get_theme
+    theme = get_theme(qr.business.category)
+    steps = [('Rate',1),('Highlights',2),('Write',3),('Submit',4)]
+    return render(request, 'reviews/review.html', {
+        'qr': qr, 'business': qr.business,
+        'theme': theme, 'steps': steps,
+    })
 
 def api_chips(request, token, rating):
     qr = get_object_or_404(QRCode, token=token, is_active=True)

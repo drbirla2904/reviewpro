@@ -2,124 +2,212 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-<title>Review {{ business.name }}</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Review — {{ business.name }}</title>
 <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Lora:wght@500;600&family=Cormorant+Garamond:wght@500;600&family=Barlow+Condensed:wght@500;700&family=EB+Garamond:wght@500;600&family=Libre+Baskerville:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'css/app.css' %}">
 <style>
-body{background:linear-gradient(160deg,#0b0b14 0%,#0e0e1e 50%,#0b0b14 100%)}
-.review-page{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
-.r-header{padding:20px 22px 18px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
+:root{
+  --bg:{{ theme.bg }};
+  --bg2:{{ theme.bg2 }};
+  --ac:{{ theme.accent }};
+  --ac2:{{ theme.accent2 }};
+  --tx:{{ theme.text }};
+  --tx2:{{ theme.text2 }};
+  --bd:{{ theme.border }};
+  --glow:{{ theme.glow }};
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100vh;font-family:{{ theme.font }},system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:var(--bg);color:var(--tx)}
+
+/* ── PAGE ── */
+.page{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;overflow:hidden}
+
+/* ── BACKGROUND: radial glow ── */
+.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.bg-glow::before{content:'';position:absolute;top:-120px;left:-80px;width:380px;height:380px;background:var(--glow);filter:blur(90px);opacity:.45;animation:bg-breathe 5s ease-in-out infinite}
+.bg-glow::after{content:'';position:absolute;bottom:-100px;right:-60px;width:300px;height:300px;background:var(--glow);filter:blur(80px);opacity:.3;animation:bg-breathe 5s ease-in-out infinite 2.5s}
+@keyframes bg-breathe{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:.55;transform:scale(1.12)}}
+
+/* ── STICKERS ── */
+.sticker{position:fixed;pointer-events:none;z-index:0;opacity:.22;animation:sticker-drift ease-in-out infinite}
+@keyframes sticker-drift{0%,100%{transform:translateY(0) rotate(0deg)}33%{transform:translateY(-12px) rotate(3deg)}66%{transform:translateY(6px) rotate(-2deg)}}
+
+/* ── HEADER ── */
+.r-header{padding:22px 20px 16px;position:relative;z-index:10;border-bottom:1px solid var(--bd)}
 .biz-row{display:flex;align-items:center;gap:14px}
-.biz-logo{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;border:1px solid var(--border2);background:var(--surface)}
-.biz-name{font-size:17px;font-weight:700;margin-bottom:2px}
-.biz-address{font-size:12px;color:var(--text2);margin-bottom:4px}
-.g-connected{display:inline-flex;align-items:center;gap:5px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.22);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:600;color:var(--green)}
-.g-basic{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:3px 8px;font-size:10px;color:var(--text3)}
-.progress-wrap{margin-top:14px}
-.step-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:5px}
-.step-labels .done{color:var(--purple);font-weight:600}
-.progress-track{height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--purple2));border-radius:2px;transition:width .4s ease;width:0%}
-.r-body{padding:22px;flex:1}
-.r-section{margin-bottom:22px}
-.r-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
-.star-row{display:flex;gap:6px;margin-bottom:6px}
-.star-btn{font-size:34px;cursor:pointer;background:none;border:none;padding:2px;line-height:1;filter:grayscale(1) brightness(.3);transition:filter .12s,transform .1s;-webkit-tap-highlight-color:transparent}
-.star-btn.on{filter:none}
-.star-btn:hover{transform:scale(1.12)}
-.rating-hint{font-size:13px;color:var(--text2);min-height:18px}
-.rating-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;padding:0 2px}
-.chips-grid{display:flex;flex-wrap:wrap;gap:7px}
-.chip-btn{background:rgba(255,255,255,.05);border:1px solid var(--border2);padding:7px 13px;border-radius:20px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:.12s;-webkit-tap-highlight-color:transparent}
-.chip-btn:hover,.chip-btn.selected{background:var(--purple-bg);border-color:var(--purple);color:#a5b4fc}
-.review-ta{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:var(--r2);padding:12px 14px;color:var(--text);font-size:14px;line-height:1.7;resize:none;height:130px;outline:none;font-family:inherit;transition:.15s}
-.review-ta:focus{border-color:rgba(99,102,241,.5);background:rgba(255,255,255,.06)}
-.review-ta::placeholder{color:var(--text3)}
-.ta-footer{display:flex;justify-content:space-between;align-items:center;margin-top:5px}
-.char-count{font-size:11px;color:var(--text3)}
-.ai-draft-btn{font-size:12px;font-weight:500;color:#a5b4fc;background:none;border:none;cursor:pointer;padding:0;display:none}
-.ai-draft-btn:hover{text-decoration:underline}
-.sentiment-pill{display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:var(--r2);font-size:13px;margin-bottom:14px;border:1px solid;opacity:0;transition:opacity .25s;pointer-events:none}
-.sentiment-pill.show{opacity:1}
-.sentiment-pill.positive{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
-.sentiment-pill.neutral{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}
-.sentiment-pill.negative{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
-.info-box{display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:var(--r2);font-size:12px;color:#93c5fd;margin-bottom:14px;line-height:1.5}
-.gift-section{display:none;padding:22px;animation:fadeUp .4s ease-out}
-.gift-hero{text-align:center;margin-bottom:20px}
-.confetti-anim{font-size:48px;display:block;margin-bottom:12px;animation:pop .5s ease-out}
-.gift-heading{font-size:22px;font-weight:700;background:linear-gradient(135deg,var(--green),#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
-.gift-subtext{font-size:13px;color:var(--text2)}
-.gift-card-box{border-radius:16px;padding:22px 20px;border:1px solid rgba(255,255,255,.1);margin:16px 0}
-.gc-icon{font-size:32px;margin-bottom:10px}
-.gc-value{font-size:26px;font-weight:700;margin-bottom:4px}
-.gc-desc{font-size:12px;opacity:.75;margin-bottom:14px}
-.gc-code{background:rgba(0,0,0,.25);border-radius:8px;padding:10px;text-align:center;font-family:monospace;font-size:17px;letter-spacing:.15em;font-weight:700;margin-bottom:6px}
-.gc-expiry{font-size:11px;opacity:.5;text-align:center}
-.google-cta{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1a1a1a;border:none;border-radius:var(--r2);padding:13px 20px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:14px;text-decoration:none;transition:.14s}
-.google-cta:hover{background:#f1f1f1;color:#1a1a1a}
-.google-cta-note{font-size:11px;color:var(--text3);text-align:center;margin-top:8px}
-.escalate-section{display:none;padding:28px 22px;text-align:center;animation:fadeUp .4s ease-out}
-.esc-icon{font-size:52px;display:block;margin-bottom:16px}
-.esc-title{font-size:20px;font-weight:700;color:var(--red);margin-bottom:8px}
-.esc-desc{font-size:14px;color:var(--text2);max-width:300px;margin:0 auto 22px;line-height:1.6}
-.contact-card{display:flex;align-items:center;gap:14px;padding:13px 16px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:9px;cursor:pointer;transition:.14s;text-decoration:none;color:var(--text)}
-.contact-card:hover{background:rgba(255,255,255,.07);color:var(--text)}
-.cc-icon{font-size:20px;width:30px;text-align:center;flex-shrink:0}
-.cc-label{font-size:14px;font-weight:500}
-.cc-sub{font-size:11px;color:var(--text3);margin-top:1px}
-.gc-orange{background:linear-gradient(135deg,#1c1000,#3d2200)} .gc-orange .gc-value{color:#fb923c}
-.gc-purple{background:linear-gradient(135deg,#0e0e1f,#1e1a40)} .gc-purple .gc-value{color:#a78bfa}
-.gc-pink{background:linear-gradient(135deg,#1a0015,#3d0030)}   .gc-pink .gc-value{color:#f472b6}
-.gc-green{background:linear-gradient(135deg,#001a0a,#003d18)}  .gc-green .gc-value{color:#4ade80}
-.gc-blue{background:linear-gradient(135deg,#001228,#002a52)}   .gc-blue .gc-value{color:#60a5fa}
-.gc-teal{background:linear-gradient(135deg,#001818,#00383a)}   .gc-teal .gc-value{color:#2dd4bf}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pop{0%{transform:scale(.4);opacity:0}80%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.biz-logo-wrap{position:relative;flex-shrink:0}
+.biz-logo{width:60px;height:60px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,var(--ac),var(--ac2));box-shadow:0 6px 24px var(--glow);animation:logo-float 4s ease-in-out infinite}
+@keyframes logo-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.logo-ring{position:absolute;inset:-4px;border-radius:22px;border:1.5px solid var(--ac);opacity:0;animation:ring-in 2s ease-out .5s forwards,ring-pulse 3s ease-in-out 2.5s infinite}
+@keyframes ring-in{from{opacity:0;transform:scale(1.2)}to{opacity:.45;transform:scale(1)}}
+@keyframes ring-pulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:.6;transform:scale(1.06)}}
+.biz-name{font-size:20px;font-weight:700;letter-spacing:-.3px;margin-bottom:2px;line-height:1.2}
+.biz-loc{font-size:12px;color:var(--tx2);margin-bottom:5px}
+.g-tag{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;font-family:'Inter',sans-serif}
+.g-on{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#4ade80}
+.g-off{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.35)}
+
+/* ── STEPS ── */
+.steps-row{display:flex;align-items:center;padding:12px 20px 0;position:relative;z-index:10}
+.step-item{display:flex;flex-direction:column;align-items:center;flex:1;gap:4px}
+.step-circle{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:'Inter',sans-serif;border:1.5px solid var(--bd);color:var(--tx2);background:var(--bg2);transition:.3s;position:relative;z-index:1}
+.step-circle.on{border-color:var(--ac);background:var(--ac);color:#fff;box-shadow:0 0 12px var(--glow)}
+.step-circle.done{border-color:var(--ac);background:transparent;color:var(--ac)}
+.step-lbl{font-size:9px;color:var(--tx2);font-family:'Inter',sans-serif;font-weight:500;transition:.3s}
+.step-lbl.on,.step-lbl.done{color:var(--ac)}
+.step-line{flex:1;height:1.5px;background:var(--bd);margin:0 4px;margin-bottom:14px;transition:.3s}
+.step-line.done{background:var(--ac)}
+.prog-bar{height:2px;background:rgba(255,255,255,.07);margin:10px 20px 0;border-radius:1px;overflow:hidden;position:relative;z-index:10}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:1px;transition:width .5s ease;width:0%}
+
+/* ── BODY ── */
+.r-body{padding:20px;flex:1;position:relative;z-index:10}
+.r-sec{margin-bottom:22px}
+.r-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tx2);margin-bottom:10px;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:8px}
+
+/* ── STARS ── */
+.star-row{display:flex;gap:5px;margin-bottom:6px}
+.star-btn{font-size:36px;cursor:pointer;background:none;border:none;padding:2px;line-height:1;filter:grayscale(1) brightness(.25);transition:.15s}
+.star-btn.on{filter:none;animation:star-pop .2s ease-out}
+@keyframes star-pop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+.star-hint-row{display:flex;justify-content:space-between;font-size:9px;color:var(--tx2);font-family:'Inter',sans-serif;padding:0 2px;margin-bottom:6px}
+.rating-text{font-size:14px;color:var(--tx2);min-height:20px;font-style:italic;transition:.2s}
+
+/* ── CHIPS ── */
+.chips-wrap{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);padding:8px 14px;border-radius:24px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;color:var(--tx2);cursor:pointer;transition:.15s;user-select:none}
+.chip:hover{border-color:var(--ac);color:var(--tx)}
+.chip.on{background:rgba(var(--ac-rgb,99,102,241),.15);border-color:var(--ac);color:var(--ac2);font-weight:600}
+
+/* ── TEXTAREA ── */
+.rev-ta{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--bd);border-radius:12px;padding:13px 15px;color:var(--tx);font-size:14px;font-family:{{ theme.font }},system-ui;line-height:1.7;resize:none;height:130px;outline:none;transition:.2s}
+.rev-ta:focus{border-color:var(--ac);background:rgba(255,255,255,.08);box-shadow:0 0 0 3px var(--glow)}
+.rev-ta::placeholder{color:rgba(255,255,255,.18);font-style:italic}
+.ta-foot{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-family:'Inter',sans-serif}
+.char-ct{font-size:11px;color:var(--tx2)}
+.ai-hint-text{font-size:11px;color:var(--ac);display:flex;align-items:center;gap:5px}
+.ai-dot{width:5px;height:5px;border-radius:50%;background:var(--ac);animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ── NAME ── */
+.name-inp{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--bd);border-radius:12px;padding:11px 14px;color:var(--tx);font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:.2s}
+.name-inp:focus{border-color:var(--ac);background:rgba(255,255,255,.08)}
+.name-inp::placeholder{color:rgba(255,255,255,.18)}
+
+/* ── SENTIMENT ── */
+.sent-pill{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;font-size:12px;font-family:'Inter',sans-serif;margin-bottom:16px;border:1px solid;opacity:0;transition:.3s;pointer-events:none;line-height:1.45}
+.sent-pill.vis{opacity:1}
+.sent-pill.pos{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.28);color:#4ade80}
+.sent-pill.neu{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.28);color:#f59e0b}
+.sent-pill.neg{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.28);color:#f87171}
+.sent-icon{font-size:20px;flex-shrink:0}
+
+/* ── SUBMIT ── */
+.sub-btn{width:100%;padding:16px;border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:-.2px;background:linear-gradient(135deg,var(--ac),var(--ac2));box-shadow:0 4px 24px var(--glow);position:relative;overflow:hidden}
+.sub-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent)}
+.sub-btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 8px 32px var(--glow)}
+.sub-btn:not(:disabled):active{transform:scale(.98)}
+.sub-btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
+
+/* ── GIFT ── */
+.gift-sec{display:none;padding:22px;animation:rise .5s ease-out;position:relative;z-index:10}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.gift-top{text-align:center;margin-bottom:18px}
+.confetti-line{font-size:32px;letter-spacing:8px;margin-bottom:10px;animation:confetti-shake .4s ease-out}
+@keyframes confetti-shake{0%,100%{transform:rotate(0)}30%{transform:rotate(-4deg)}70%{transform:rotate(4deg)}}
+.gift-h{font-size:24px;font-weight:700;margin-bottom:4px;background:linear-gradient(135deg,#4ade80,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.gift-sub{font-size:13px;color:var(--tx2);font-family:'Inter',sans-serif}
+.gift-card{border-radius:18px;padding:22px 20px;border:1px solid rgba(255,255,255,.1);margin:14px 0;position:relative;overflow:hidden}
+.gift-card::before{content:'';position:absolute;top:-40%;right:-20%;width:180px;height:180px;background:rgba(255,255,255,.04);border-radius:50%;pointer-events:none}
+.gc-ico{font-size:36px;display:block;margin-bottom:8px;animation:bounce-gift .5s ease-out .1s both}
+@keyframes bounce-gift{0%{transform:scale(0) rotate(-15deg);opacity:0}70%{transform:scale(1.12) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+.gc-val{font-size:28px;font-weight:800;margin-bottom:3px;letter-spacing:-.5px}
+.gc-desc{font-size:12px;opacity:.72;margin-bottom:14px;font-family:'Inter',sans-serif}
+.gc-code{background:rgba(0,0,0,.28);border-radius:10px;padding:11px;text-align:center;font-family:monospace;font-size:18px;letter-spacing:.2em;font-weight:700;margin-bottom:5px}
+.gc-exp{font-size:11px;opacity:.45;text-align:center;font-family:'Inter',sans-serif}
+.gc-orange{background:linear-gradient(135deg,#1c1000,#3a2000)}.gc-orange .gc-val,.gc-orange .gc-code{color:#fb923c}
+.gc-purple{background:linear-gradient(135deg,#0e0e1f,#1a1838)}.gc-purple .gc-val,.gc-purple .gc-code{color:#a78bfa}
+.gc-pink{background:linear-gradient(135deg,#180012,#350028)}.gc-pink .gc-val,.gc-pink .gc-code{color:#f472b6}
+.gc-green{background:linear-gradient(135deg,#001a0a,#003518)}.gc-green .gc-val,.gc-green .gc-code{color:#4ade80}
+.gc-blue{background:linear-gradient(135deg,#001228,#002045)}.gc-blue .gc-val,.gc-blue .gc-code{color:#60a5fa}
+.gc-teal{background:linear-gradient(135deg,#001818,#003030)}.gc-teal .gc-val,.gc-teal .gc-code{color:#2dd4bf}
+.redir-box{background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;text-align:center;font-family:'Inter',sans-serif}
+.redir-num{font-size:32px;font-weight:800;color:var(--ac);display:block;line-height:1;margin-bottom:4px}
+.redir-txt{font-size:12px;color:var(--tx2);margin-bottom:10px;line-height:1.5}
+.g-btn{display:flex;align-items:center;justify-content:center;gap:9px;background:#fff;color:#1a1a1a;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;width:100%;cursor:pointer;text-decoration:none;transition:.15s}
+.g-btn:hover{background:#f0f0f0;color:#1a1a1a}
+
+/* ── ESCALATION ── */
+.esc-sec{display:none;padding:28px 20px;text-align:center;animation:rise .4s ease-out;position:relative;z-index:10}
+.esc-ico{font-size:52px;display:block;margin-bottom:14px}
+.esc-h{font-size:19px;font-weight:700;color:#f87171;margin-bottom:8px}
+.esc-p{font-size:13px;color:var(--tx2);max-width:290px;margin:0 auto 22px;line-height:1.65;font-family:'Inter',sans-serif}
+.ct-card{display:flex;align-items:center;gap:13px;padding:13px 15px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;text-decoration:none;color:var(--tx);transition:.14s}
+.ct-card:hover{background:rgba(255,255,255,.08);color:var(--tx)}
+.ct-ico{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.ct-lbl{font-size:14px;font-weight:600;font-family:'Inter',sans-serif}
+.ct-sub{font-size:11px;color:var(--tx2);margin-top:1px;font-family:'Inter',sans-serif}
+
+.spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-<div class="review-page">
+<div class="bg-glow"></div>
 
-  <!-- HEADER: business branding -->
+{# ── CATEGORY STICKERS ── #}
+{% for s in theme.stickers %}
+<div class="sticker" style="left:{{ s.x }};top:{{ s.y }};width:{{ s.size }};height:{{ s.size }};animation-duration:{{ s.dur }};animation-delay:{{ s.delay }}">
+  {{ s.svg|safe }}
+</div>
+{% endfor %}
+
+<div class="page">
+
+  {# ── HEADER ── #}
   <div class="r-header">
     <div class="biz-row">
-      <div class="biz-logo">{{ business.logo_emoji }}</div>
-      <div style="flex:1;overflow:hidden">
+      <div class="biz-logo-wrap">
+        <div class="biz-logo">{{ business.logo_emoji }}</div>
+        <div class="logo-ring"></div>
+      </div>
+      <div style="flex:1;min-width:0">
         <div class="biz-name">{{ business.name }}</div>
         {% if business.address or business.city %}
-        <div class="biz-address">{% if business.address %}{{ business.address }}{% if business.city %}, {% endif %}{% endif %}{{ business.city }}</div>
+        <div class="biz-loc">📍 {% if business.address %}{{ business.address }}{% if business.city %}, {% endif %}{% endif %}{{ business.city }}</div>
         {% endif %}
         {% if business.google_place_id %}
-        <span class="g-connected">
+        <span class="g-tag g-on">
           <svg width="10" height="10" viewBox="0 0 18 18"><path d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z" fill="#4285F4"/><path d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z" fill="#34A853"/><path d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z" fill="#FBBC05"/><path d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z" fill="#EA4335"/></svg>
           Google Verified
         </span>
         {% else %}
-        <span class="g-basic">Google Business</span>
+        <span class="g-tag g-off">Google Business</span>
         {% endif %}
       </div>
     </div>
-    <!-- Step progress -->
-    <div class="progress-wrap">
-      <div class="step-labels">
-        <span id="lbl1">Rate</span>
-        <span id="lbl2">Highlights</span>
-        <span id="lbl3">Write</span>
-        <span id="lbl4">Submit</span>
-      </div>
-      <div class="progress-track"><div class="progress-fill" id="prog"></div></div>
-    </div>
   </div>
 
-  <!-- REVIEW FORM -->
-  <div id="form-section" class="r-body">
+  {# ── STEP PROGRESS ── #}
+  <div class="steps-row">
+    {% for label,num in steps %}
+    <div class="step-item">
+      <div class="step-circle" id="sc{{ num }}">{{ num }}</div>
+      <div class="step-lbl" id="sl{{ num }}">{{ label }}</div>
+    </div>
+    {% if not forloop.last %}<div class="step-line" id="sln{{ num }}"></div>{% endif %}
+    {% endfor %}
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="pf"></div></div>
 
-    <!-- Step 1: Stars -->
-    <div class="r-section">
-      <div class="r-label">Step 1 — Your Rating</div>
+  {# ── FORM ── #}
+  <div id="form-sec" class="r-body">
+
+    {# Stars #}
+    <div class="r-sec">
+      <div class="r-lbl">Your Rating</div>
       <div class="star-row">
         <button class="star-btn" onclick="setStar(1)">⭐</button>
         <button class="star-btn" onclick="setStar(2)">⭐</button>
@@ -127,352 +215,267 @@ body{background:linear-gradient(160deg,#0b0b14 0%,#0e0e1e 50%,#0b0b14 100%)}
         <button class="star-btn" onclick="setStar(4)">⭐</button>
         <button class="star-btn" onclick="setStar(5)">⭐</button>
       </div>
-      <div class="rating-labels"><span>Poor</span><span>Average</span><span>Good</span><span>Very good</span><span>Excellent</span></div>
-      <div class="rating-hint" id="rating-hint" style="margin-top:6px">Tap the stars to rate your experience</div>
+      <div class="star-hint-row"><span>Poor</span><span>Average</span><span>Good</span><span>Very good</span><span>Excellent</span></div>
+      <div class="rating-text" id="rt">Tap to rate your experience</div>
     </div>
 
-    <!-- Step 2: Chips -->
-    <div id="chips-section" class="r-section" style="display:none">
-      <div class="r-label">Step 2 — What stood out?</div>
-      <div class="chips-grid" id="chips-wrap">
-        <span style="font-size:13px;color:var(--text3)">Loading suggestions…</span>
-      </div>
-      <div style="font-size:11px;color:var(--text3);margin-top:8px">Select all that apply</div>
-    </div>
-
-    <!-- Step 3: Write -->
-    <div id="write-section" class="r-section" style="display:none">
-      <div class="r-label">Step 3 — Write your review</div>
-      <textarea class="review-ta" id="review-text" maxlength="1000"
-        placeholder="Describe your experience in your own words…"
-        oninput="onTextInput()"></textarea>
-      <div class="ta-footer">
-        <span class="char-count"><span id="char-count">0</span> / 1000</span>
-        <span style="font-size:11px;color:var(--text3)">AI drafts as you select highlights ✦</span>
+    {# Chips #}
+    <div id="chips-sec" class="r-sec" style="display:none">
+      <div class="r-lbl">What stood out? <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--ac);font-size:10px">select all that apply</span></div>
+      <div class="chips-wrap" id="chips-wrap">
+        <span style="font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif">
+          <span class="spinner" style="border-top-color:var(--ac)"></span> Loading…
+        </span>
       </div>
     </div>
 
-    <!-- Sentiment indicator -->
-    <div class="sentiment-pill" id="sentiment-pill">
-      <span id="s-icon"></span><span id="s-text"></span>
+    {# Textarea #}
+    <div id="write-sec" class="r-sec" style="display:none">
+      <div class="r-lbl">
+        Your Review
+        <span id="ai-wrt" class="ai-hint-text" style="display:none"><span class="ai-dot"></span> AI writing…</span>
+      </div>
+      <textarea class="rev-ta" id="rev-text" maxlength="1000"
+        placeholder="Share your experience…" oninput="onType()"></textarea>
+      <div class="ta-foot">
+        <span class="char-ct"><span id="cc">0</span>/1000</span>
+        <span style="font-size:11px;color:var(--tx2);font-family:'Inter',sans-serif;opacity:.6">AI drafts as you select highlights ✦</span>
+      </div>
     </div>
 
-    <!-- Name (optional) -->
-    <div id="name-section" class="r-section" style="display:none">
-      <div class="r-label">Your Name <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(optional)</span></div>
-      <input class="form-control" id="reviewer-name" type="text" placeholder="e.g. Priya S." autocomplete="name">
+    {# Sentiment #}
+    <div class="sent-pill" id="sp">
+      <span class="sent-icon" id="si"></span>
+      <div><div style="font-weight:700;margin-bottom:2px;font-family:'Inter',sans-serif" id="sh"></div><div style="font-size:11px;opacity:.8;font-family:'Inter',sans-serif" id="sd"></div></div>
     </div>
 
-    <!-- Info note -->
-    <div class="info-box" id="info-box" style="display:none">
-      <svg width="14" height="14" viewBox="0 0 18 18" style="flex-shrink:0;margin-top:1px"><path d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z" fill="#4285F4"/><path d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z" fill="#34A853"/><path d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z" fill="#FBBC05"/><path d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z" fill="#EA4335"/></svg>
-      <span>Tap <strong>Submit Review</strong> — your review is saved and you'll be taken to Google Maps automatically to post it from your own account. Positive reviews earn a gift reward! 🎁</span>
+    {# Name #}
+    <div id="name-sec" class="r-sec" style="display:none">
+      <div class="r-lbl">Your Name <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--tx2)">(optional)</span></div>
+      <input class="name-inp" id="rname" type="text" placeholder="e.g. Priya S." autocomplete="name">
     </div>
 
-    <!-- Submit -->
-    <button class="btn btn-primary btn-block btn-lg" id="submit-btn" onclick="submitReview()" disabled style="display:none">
-        Submit &amp; Post to Google →
+    {# Submit #}
+    <button class="sub-btn" id="sub-btn" onclick="doSubmit()" disabled style="display:none">
+      <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><path d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z" fill="rgba(255,255,255,.9)"/><path d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z" fill="rgba(255,255,255,.9)"/><path d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z" fill="rgba(255,255,255,.9)"/><path d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z" fill="rgba(255,255,255,.9)"/></svg>
+      Submit &amp; Post to Google
     </button>
 
   </div>
 
-  <!-- GIFT REVEAL (positive) -->
-  <div id="gift-section" class="gift-section">
-    <div class="gift-hero">
-      <span class="confetti-anim">🎉</span>
-      <div class="gift-heading">Thank you for your review!</div>
-      <p class="gift-subtext">Save this — show at the counter on your next visit 🎁<br><span style="font-size:11px;opacity:.7">Taking you to Google in a moment…</span></p>
+  {# ── GIFT ── #}
+  <div id="gift-sec" class="gift-sec">
+    <div class="gift-top">
+      <div class="confetti-line">🎊 🎉 🎊</div>
+      <div class="gift-h">Your Gift is Ready!</div>
+      <div class="gift-sub">Show this at the counter on your next visit</div>
     </div>
-    <div id="gift-card-container"></div>
-
-    <!-- Auto-redirect to Google after showing gift card -->
-    <div id="google-cta-wrap" style="display:none">
-      <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.22);border-radius:var(--r2);padding:14px 16px;margin-bottom:12px;font-size:13px;color:var(--green);line-height:1.7;text-align:center">
-        <div style="font-size:22px;margin-bottom:6px">⭐</div>
-        <strong>Taking you to Google Maps in <span id="countdown">2</span>s…</strong><br>
-        <span style="color:var(--text2);font-size:12px">Your review is pre-filled — just tap the blue <strong style="color:var(--text)">Post</strong> button on Google</span>
-      </div>
-      <a id="google-cta-btn" href="#" class="google-cta">
-        <svg width="18" height="18" viewBox="0 0 18 18"><path d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z" fill="#4285F4"/><path d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z" fill="#34A853"/><path d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z" fill="#FBBC05"/><path d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z" fill="#EA4335"/></svg>
+    <div id="gift-slot"></div>
+    <div class="redir-box" id="redir-box" style="display:none">
+      <span class="redir-num" id="redir-num">3</span>
+      <p class="redir-txt">Taking you to <strong>Google Maps</strong>…<br>Your review is pre-filled — tap the blue <strong>Post</strong> button</p>
+      <a id="g-link" href="#" class="g-btn">
+        <svg width="16" height="16" viewBox="0 0 18 18"><path d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z" fill="#4285F4"/><path d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z" fill="#34A853"/><path d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z" fill="#FBBC05"/><path d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z" fill="#EA4335"/></svg>
         Go to Google Maps now →
       </a>
     </div>
-
-    <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:16px">Thank you for helping {{ business.name }} grow 🙏</p>
+    <p style="text-align:center;font-size:11px;color:var(--tx2);margin-top:14px;opacity:.55;font-family:'Inter',sans-serif">Thank you for helping {{ business.name }} grow 🙏</p>
   </div>
 
-  <!-- ESCALATION (negative review) -->
-  <div id="escalate-section" class="escalate-section">
-    <span class="esc-icon">😔</span>
-    <div class="esc-title">We're sorry to hear that</div>
-    <p class="esc-desc">Your feedback has been shared with the management team. Please reach out so we can make it right.</p>
+  {# ── ESCALATION ── #}
+  <div id="esc-sec" class="esc-sec">
+    <span class="esc-ico">😔</span>
+    <div class="esc-h">We're truly sorry</div>
+    <p class="esc-p">Your feedback has been shared with the management team. Please reach out so we can make this right.</p>
     {% if business.phone %}
-    <a href="tel:{{ business.phone }}" class="contact-card">
-      <span class="cc-icon">📞</span>
-      <div><div class="cc-label">Call Us</div><div class="cc-sub">{{ business.phone }}</div></div>
+    <a href="tel:{{ business.phone }}" class="ct-card">
+      <span class="ct-ico">📞</span>
+      <div><div class="ct-lbl">Call Us</div><div class="ct-sub">{{ business.phone }}</div></div>
     </a>
     {% endif %}
     {% if business.email %}
-    <a href="mailto:{{ business.email }}" class="contact-card">
-      <span class="cc-icon">✉️</span>
-      <div><div class="cc-label">Email Manager</div><div class="cc-sub">{{ business.email }}</div></div>
+    <a href="mailto:{{ business.email }}" class="ct-card">
+      <span class="ct-ico">✉️</span>
+      <div><div class="ct-lbl">Email Manager</div><div class="ct-sub">{{ business.email }}</div></div>
     </a>
     {% endif %}
-    <button class="btn btn-secondary btn-sm" style="margin-top:16px" onclick="resetForm()">← Edit my review</button>
+    <button style="background:none;border:1px solid var(--bd);color:var(--tx2);padding:9px 20px;border-radius:10px;cursor:pointer;font-size:13px;margin-top:14px;font-family:'Inter',sans-serif" onclick="resetForm()">← Edit my review</button>
   </div>
 
-</div>
+</div>{# /page #}
 
 <script src="{% static 'js/app.js' %}"></script>
 <script>
-const QR_TOKEN   = '{{ qr.token }}';
-const GOOGLE_URL = '{{ business.google_review_url|escapejs }}';
-const HINTS      = ['','Poor','Below average','Average','Good','Excellent!'];
-const NEG_WORDS  = ['bad','terrible','awful','horrible','worst','dirty','slow','rude',
-  'poor','disappointing','waste','overpriced','cold','stale','unhelpful',
-  'unprofessional','wrong','broken','noisy','waiting','waited','disgusting'];
+const QR   = '{{ qr.token }}';
+const GURL = '{{ business.google_review_url|escapejs }}';
+const BIZ  = '{{ business.name|escapejs }}';
+const HINTS= ['','Poor 😟','Below average 😕','Okay 😐','Good 😊','Excellent! 🤩'];
+const NEG  = ['bad','terrible','awful','horrible','worst','dirty','slow','rude','poor',
+  'disappointing','waste','overpriced','cold','stale','unhelpful','unprofessional',
+  'wrong','broken','noisy','waiting','waited','disgusting','filthy'];
 
-let starRating = 0, selectedChips = [], draftTimer = null, submitting = false;
+let stars=0, chips=[], timer=null, busy=false;
 
-// ── Progress bar ────────────────────────────────────────────────────────────
-function setProgress(pct) {
-  document.getElementById('prog').style.width = pct + '%';
-  const thresholds = [15, 40, 70, 100];
-  ['lbl1','lbl2','lbl3','lbl4'].forEach((id, i) => {
-    document.getElementById(id).classList.toggle('done', pct >= thresholds[i]);
-  });
+function step(n){
+  const pcts=[0,25,55,80,100];
+  document.getElementById('pf').style.width=pcts[n]+'%';
+  for(let i=1;i<=4;i++){
+    const c=document.getElementById('sc'+i), l=document.getElementById('sl'+i);
+    c.classList.toggle('on',i===n); c.classList.toggle('done',i<n);
+    l.classList.toggle('on',i===n); l.classList.toggle('done',i<n);
+    if(i<4){ const ln=document.getElementById('sln'+i); ln&&ln.classList.toggle('done',i<n); }
+  }
 }
 
-// ── Star rating ─────────────────────────────────────────────────────────────
-function setStar(n) {
-  starRating = n;
-  document.querySelectorAll('.star-btn').forEach((b, i) => b.classList.toggle('on', i < n));
-  document.getElementById('rating-hint').textContent = HINTS[n];
-  setProgress(15);
-  loadChips(n);
+function setStar(n){
+  stars=n;
+  document.querySelectorAll('.star-btn').forEach((b,i)=>b.classList.toggle('on',i<n));
+  document.getElementById('rt').textContent=HINTS[n];
+  step(2); loadChips(n);
 }
 
-// ── Load chips from server ───────────────────────────────────────────────────
-async function loadChips(rating) {
-  const wrap = document.getElementById('chips-wrap');
-  document.getElementById('chips-section').style.display = 'block';
-  wrap.innerHTML = '<span style="font-size:13px;color:var(--text3);display:flex;align-items:center;gap:8px">' +
-    '<span class="spinner" style="width:14px;height:14px;border-top-color:var(--purple)"></span>Loading…</span>';
-  selectedChips = [];
-
-  try {
-    const d = await apiGet('/r/' + QR_TOKEN + '/chips/' + rating + '/');
-    wrap.innerHTML = '';
-    (d.chips || []).forEach(chip => {
-      const b = document.createElement('button');
-      b.className = 'chip-btn';
-      b.textContent = chip;
-      b.onclick = () => toggleChip(b, chip);
-      wrap.appendChild(b);
+async function loadChips(r){
+  const w=document.getElementById('chips-wrap');
+  document.getElementById('chips-sec').style.display='block';
+  w.innerHTML='<span style="font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:8px;font-family:Inter,sans-serif"><span class="spinner" style="border-top-color:var(--ac)"></span>Loading…</span>';
+  chips=[];
+  try{
+    const d=await apiGet('/r/'+QR+'/chips/'+r+'/');
+    w.innerHTML='';
+    (d.chips||[]).forEach(ch=>{
+      const b=document.createElement('button');
+      b.className='chip'; b.textContent=ch;
+      b.onclick=()=>toggleChip(b,ch);
+      w.appendChild(b);
     });
-  } catch (e) {
-    wrap.innerHTML = '<span style="font-size:13px;color:var(--text3)">Write your own review below.</span>';
+  }catch(e){
+    w.innerHTML='<span style="font-size:12px;color:var(--tx2)">Write your own review below.</span>';
   }
-
-  setProgress(40);
-  ['write-section','name-section','info-box','submit-btn'].forEach(id => {
-    document.getElementById(id).style.display = id === 'info-box' ? 'flex' : 'block';
-  });
+  ['write-sec','name-sec','sub-btn'].forEach(id=>document.getElementById(id).style.display='block');
+  step(3);
 }
 
-// ── Chip toggle — auto-drafts review after 400ms debounce ───────────────────
-function toggleChip(btn, chip) {
-  btn.classList.toggle('selected');
-  selectedChips = [...document.querySelectorAll('#chips-wrap .chip-btn.selected')]
-    .map(e => e.textContent);
+function toggleChip(btn,ch){
+  btn.classList.toggle('on');
+  chips=[...document.querySelectorAll('#chips-wrap .chip.on')].map(e=>e.textContent);
+  checkOk();
+  clearTimeout(timer);
+  if(chips.length>0) timer=setTimeout(autoDraft,400);
+}
 
-  checkSubmit();
+async function autoDraft(){
+  if(!chips.length) return;
+  const ta=document.getElementById('rev-text');
+  const badge=document.getElementById('ai-wrt');
+  badge.style.display='inline-flex'; ta.style.opacity='.5';
+  try{
+    const d=await apiPost('/r/'+QR+'/suggest/',{chips,rating:stars});
+    if(d.suggestion){ta.value=d.suggestion;onType();}
+  }catch(e){
+    ta.value=stars>=4
+      ? 'Really happy with my visit to '+BIZ+'. '+chips.slice(0,3).join(', ')+' were highlights. Would recommend!'
+      : 'My visit to '+BIZ+' was disappointing. Issues with '+chips.slice(0,2).join(', ')+'. Hope they improve.';
+    onType();
+  }
+  ta.style.opacity='1'; badge.style.display='none';
+}
 
-  // Auto-draft: wait 400ms so rapid multi-tapping doesn't fire many requests
-  clearTimeout(draftTimer);
-  if (selectedChips.length > 0) {
-    draftTimer = setTimeout(() => autoDraftFromChips(), 400);
+function onType(){
+  const v=document.getElementById('rev-text').value;
+  document.getElementById('cc').textContent=v.length;
+  if(v.length>20) step(4);
+  updateSent(v); checkOk();
+}
+
+function updateSent(txt){
+  const p=document.getElementById('sp');
+  if(!txt||txt.length<12){p.className='sent-pill';return;}
+  const tl=txt.toLowerCase(), isNeg=NEG.some(w=>tl.includes(w)), isPos=stars>=4;
+  if(isNeg||(stars>0&&stars<=2)){
+    p.className='sent-pill vis neg';
+    document.getElementById('si').textContent='⚠️';
+    document.getElementById('sh').textContent='Negative feedback';
+    document.getElementById('sd').textContent='Will be escalated to management';
+  }else if(isPos){
+    p.className='sent-pill vis pos';
+    document.getElementById('si').textContent='🎁';
+    document.getElementById('sh').textContent='You qualify for a gift!';
+    document.getElementById('sd').textContent='Submit to unlock your reward';
+  }else{
+    p.className='sent-pill vis neu';
+    document.getElementById('si').textContent='📝';
+    document.getElementById('sh').textContent='Neutral feedback';
+    document.getElementById('sd').textContent='Thank you for sharing';
   }
 }
 
-// ── Auto-draft from chips (fires whenever chips change) ─────────────────────
-async function autoDraftFromChips() {
-  if (selectedChips.length === 0) return;
+function checkOk(){
+  document.getElementById('sub-btn').disabled=!(stars>0&&document.getElementById('rev-text').value.trim().length>10);
+}
 
-  const ta  = document.getElementById('review-text');
-  const was = ta.value;
-
-  // Show typing indicator
-  ta.style.opacity = '0.5';
-  ta.placeholder   = 'AI is writing your review…';
-
-  try {
-    const d = await apiPost('/r/' + QR_TOKEN + '/suggest/', {
-      chips: selectedChips,
-      rating: starRating,
+async function doSubmit(){
+  if(busy) return;
+  const txt=document.getElementById('rev-text').value.trim();
+  if(!txt||!stars) return;
+  busy=true;
+  const btn=document.getElementById('sub-btn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> Submitting…';
+  try{
+    const data=await apiPost('/submit-review/',{
+      qr_token:QR, rating:stars, review_text:txt,
+      reviewer_name:document.getElementById('rname').value.trim(),
+      selected_chips:chips,
     });
-    if (d.suggestion) {
-      ta.value = d.suggestion;
-      onTextInput();
-    }
-  } catch (e) {
-    // Fallback: simple template if API fails
-    const joined = selectedChips.join(', ');
-    if (starRating >= 4) {
-      ta.value = 'Really happy with my visit to {{ business.name }}. ' +
-        joined + ' were the highlights. Would definitely recommend!';
-    } else {
-      ta.value = 'My visit to {{ business.name }} was disappointing. ' +
-        'Issues with ' + joined + '. Hope they improve.';
-    }
-    onTextInput();
-  }
-
-  ta.style.opacity = '1';
-  ta.placeholder   = 'Describe your experience in your own words…';
-}
-
-// ── Textarea input ───────────────────────────────────────────────────────────
-function onTextInput() {
-  const val = document.getElementById('review-text').value;
-  document.getElementById('char-count').textContent = val.length;
-  if (val.length > 20) setProgress(70);
-  updateSentiment(val);
-  checkSubmit();
-}
-
-function updateSentiment(text) {
-  const pill = document.getElementById('sentiment-pill');
-  if (!text || text.length < 12) { pill.className = 'sentiment-pill'; return; }
-  const tl    = text.toLowerCase();
-  const isNeg = NEG_WORDS.some(w => tl.includes(w));
-  const isPos = starRating >= 4;
-
-  if (isNeg || (starRating > 0 && starRating <= 2)) {
-    pill.className = 'sentiment-pill show negative';
-    document.getElementById('s-icon').textContent = '⚠';
-    document.getElementById('s-text').textContent = 'Negative — will be escalated to management.';
-  } else if (isPos) {
-    pill.className = 'sentiment-pill show positive';
-    document.getElementById('s-icon').textContent = '✓';
-    document.getElementById('s-text').textContent = "Positive! You'll get a gift reward.";
-  } else {
-    pill.className = 'sentiment-pill show neutral';
-    document.getElementById('s-icon').textContent = '~';
-    document.getElementById('s-text').textContent = 'Neutral feedback.';
-  }
-}
-
-function checkSubmit() {
-  const ok = starRating > 0 &&
-    document.getElementById('review-text').value.trim().length > 10;
-  document.getElementById('submit-btn').disabled = !ok;
-}
-
-// ── ONE-CLICK SUBMIT ─────────────────────────────────────────────────────────
-// Flow:
-//   1. Save review to DB in background (fetch, no await yet)
-//   2. Show gift card immediately
-//   3. Redirect entire page to Google Maps (never blocked, works on all browsers)
-//      — review text pre-filled, user already signed in on mobile, taps Post
-async function submitReview() {
-  if (submitting) return;
-  const text = document.getElementById('review-text').value.trim();
-  if (!text || !starRating) return;
-
-  submitting = true;
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner" style="width:16px;height:16px"></span> Submitting…';
-
-  try {
-    // Save to database
-    const data = await apiPost('/submit-review/', {
-      qr_token:       QR_TOKEN,
-      rating:         starRating,
-      review_text:    text,
-      reviewer_name:  document.getElementById('reviewer-name').value.trim(),
-      selected_chips: selectedChips,
-    });
-
-    if (data.gift) {
-      // ── Positive: show gift card, then redirect to Google ──
-      document.getElementById('form-section').style.display = 'none';
-      setProgress(100);
-      renderGiftCard(data.gift);
-      document.getElementById('gift-section').style.display = 'block';
-
-      // Build Google Maps URL with review text pre-filled
-      if (GOOGLE_URL) {
-        const sep = GOOGLE_URL.includes('?') ? '&' : '?';
-        const googleUrl = GOOGLE_URL + sep + 'q=' + encodeURIComponent(text);
-        document.getElementById('google-cta-btn').href = googleUrl;
-        document.getElementById('google-cta-wrap').style.display = 'block';
-
-        // Countdown then redirect — customer sees gift card, then auto-lands on Google Maps
-        let secs = 2;
-        const cd = document.getElementById('countdown');
-        const tick = setInterval(() => {
-          secs--;
-          if (cd) cd.textContent = secs;
-          if (secs <= 0) {
-            clearInterval(tick);
-            window.location.href = googleUrl;
-          }
-        }, 1000);
+    document.getElementById('form-sec').style.display='none';
+    if(data.gift){
+      renderGift(data.gift);
+      document.getElementById('gift-sec').style.display='block';
+      if(GURL){
+        const sep=GURL.includes('?')?'&':'?';
+        const url=GURL+sep+'q='+encodeURIComponent(txt);
+        document.getElementById('g-link').href=url;
+        document.getElementById('redir-box').style.display='block';
+        let s=3; const cd=document.getElementById('redir-num');
+        const t=setInterval(()=>{ s--; cd.textContent=s; if(s<=0){clearInterval(t);window.location.href=url;}},1000);
       }
-
-    } else {
-      // ── Negative/neutral: show escalation only, no Google redirect ──
-      document.getElementById('form-section').style.display = 'none';
-      setProgress(100);
-      document.getElementById('escalate-section').style.display = 'block';
+    }else{
+      document.getElementById('esc-sec').style.display='block';
     }
-
-  } catch (e) {
-    submitting = false;
-    btn.disabled = false;
-    btn.innerHTML = 'Post Review on Google →';
-    alert(e.message && e.message.includes('already reviewed')
-      ? 'You have already reviewed this business recently.'
-      : 'Something went wrong. Please try again.');
+  }catch(e){
+    busy=false; btn.disabled=false;
+    btn.innerHTML='<svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><path d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z" fill="rgba(255,255,255,.9)"/><path d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z" fill="rgba(255,255,255,.9)"/><path d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z" fill="rgba(255,255,255,.9)"/><path d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z" fill="rgba(255,255,255,.9)"/></svg> Submit &amp; Post to Google';
+    alert(e.message&&e.message.includes('already reviewed')?'You have already reviewed this business recently.':'Something went wrong. Please try again.');
   }
 }
 
-// ── Gift card render ─────────────────────────────────────────────────────────
-function renderGiftCard(gift) {
-  const expiry = new Date(Date.now() + 30 * 864e5)
-    .toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
-  const code = gift.claim_token.slice(0, 12).toUpperCase()
-    .replace(/(.{4})/g, '$1-').replace(/-$/, '');
-
-  document.getElementById('gift-card-container').innerHTML =
-    '<div class="gift-card-box gc-' + (gift.color || 'purple') + '">' +
-    '<div class="gc-icon">' + gift.icon + '</div>' +
-    '<div class="gc-value">' + gift.title + '</div>' +
-    '<div class="gc-desc">' + gift.description + ' — worth ' + gift.value + '</div>' +
-    '<div class="gc-code">' + code + '</div>' +
-    '<div class="gc-expiry">Valid until ' + expiry + ' · Show at counter</div>' +
+function renderGift(g){
+  const exp=new Date(Date.now()+30*864e5).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  const code=g.claim_token.slice(0,12).toUpperCase().replace(/(.{4})/g,'$1 ').trim();
+  document.getElementById('gift-slot').innerHTML=
+    '<div class="gift-card gc-'+(g.color||'purple')+'">'+
+    '<span class="gc-ico">'+g.icon+'</span>'+
+    '<div class="gc-val">'+g.title+'</div>'+
+    '<div class="gc-desc">'+g.description+' · Worth '+g.value+'</div>'+
+    '<div class="gc-code">'+code+'</div>'+
+    '<div class="gc-exp">Valid until '+exp+' · Show at counter</div>'+
     '</div>';
 }
 
-// ── Reset form ───────────────────────────────────────────────────────────────
-function resetForm() {
-  submitting = false;
-  starRating = 0;
-  selectedChips = [];
-  clearTimeout(draftTimer);
-  document.getElementById('escalate-section').style.display = 'none';
-  document.getElementById('form-section').style.display     = 'block';
-  document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('on'));
-  document.getElementById('rating-hint').textContent = 'Tap the stars to rate your experience';
-  ['review-text', 'reviewer-name'].forEach(id => document.getElementById(id).value = '');
-  ['chips-section','write-section','name-section','submit-btn'].forEach(id =>
-    document.getElementById(id).style.display = 'none');
-  document.getElementById('info-box').style.display      = 'none';
-  document.getElementById('sentiment-pill').className    = 'sentiment-pill';
-  setProgress(0);
+function resetForm(){
+  busy=false; stars=0; chips=[]; clearTimeout(timer);
+  document.getElementById('esc-sec').style.display='none';
+  document.getElementById('form-sec').style.display='block';
+  document.querySelectorAll('.star-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('rt').textContent='Tap to rate your experience';
+  ['rev-text','rname'].forEach(id=>document.getElementById(id).value='');
+  ['chips-sec','write-sec','name-sec'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('sub-btn').style.display='none';
+  document.getElementById('sp').className='sent-pill';
+  step(1);
 }
+
+step(1);
 </script>
 </body>
 </html>
