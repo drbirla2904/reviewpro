@@ -1,0 +1,17 @@
+# Core
+Django>=4.2,<5.0
+djangorestframework>=3.14
+django-cors-headers>=4.3
+whitenoise[brotli]>=6.6
+gunicorn>=21.2
+
+# Storage & files
+Pillow>=10.0
+qrcode[pil]>=7.4
+python-dotenv
+
+# AI (optional — enables personalised replies, language detection, chip suggestions)
+# anthropic>=0.25
+
+# Production database (optional — SQLite is fine for small deployments)
+# psycopg2-binary>=2.9   # PostgreSQL

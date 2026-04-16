@@ -1,0 +1,125 @@
+{% load static humanize %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{% block title %}ReviewPro{% endblock %} — ReviewPro</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%236366f1'/><text x='16' y='23' text-anchor='middle' font-size='18' font-weight='800' fill='white' font-family='sans-serif'>R</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<div class="page">
+
+{% block sidebar %}
+<aside class="sidebar">
+  <a href="{% if business %}{% url 'biz_dashboard' slug=business.slug %}{% else %}/{% endif %}" class="sidebar-logo">
+    <div class="logo-mark">RP</div>
+    <span class="logo-text">ReviewPro</span>
+  </a>
+
+  {% if business %}
+  <div class="sidebar-biz">
+    <a href="{% url 'dashboard_home' %}" class="biz-pill" title="Switch business">
+      <div class="biz-emoji-wrap">{{ business.logo_emoji }}</div>
+      <div style="flex:1;overflow:hidden">
+        <div class="biz-title">{{ business.name }}</div>
+        <div class="biz-category">{{ business.category }}</div>
+      </div>
+      <span style="color:var(--text3);font-size:11px">⌄</span>
+    </a>
+  </div>
+  {% endif %}
+
+  <nav class="sidebar-nav">
+    {% if business %}
+    <div class="nav-label">Analytics</div>
+    <a href="{% url 'biz_dashboard' slug=business.slug %}" class="nav-item {% if active == 'dashboard' %}active{% endif %}">
+      <span class="ni-icon">⬡</span> Dashboard
+    </a>
+    <a href="{% url 'reviews_list' slug=business.slug %}" class="nav-item {% if active == 'reviews' %}active{% endif %}">
+      <span class="ni-icon">★</span> Reviews
+      {% if pending_reply_count %}<span class="ni-badge">{{ pending_reply_count }}</span>{% endif %}
+    </a>
+
+    <div class="nav-label">Engagement</div>
+    <a href="{% url 'replies_list' slug=business.slug %}" class="nav-item {% if active == 'replies' %}active{% endif %}">
+      <span class="ni-icon">💬</span> Replies
+      {% if pending_reply_count %}<span class="ni-badge">{{ pending_reply_count }}</span>{% endif %}
+    </a>
+    <a href="{% url 'gifts_page' slug=business.slug %}" class="nav-item {% if active == 'gifts' %}active{% endif %}">
+      <span class="ni-icon">🎁</span> Gift Cards
+    </a>
+
+    <div class="nav-label">Setup</div>
+    <a href="{% url 'qrcodes_page' slug=business.slug %}" class="nav-item {% if active == 'qrcodes' %}active{% endif %}">
+      <span class="ni-icon">▦</span> QR Codes
+    </a>
+    <a href="{% url 'settings_page' slug=business.slug %}" class="nav-item {% if active == 'settings' %}active{% endif %}">
+      <span class="ni-icon">⚙</span> Settings
+    </a>
+    {% endif %}
+
+    {% if user.businesses.count > 1 %}
+    <div class="nav-label">Businesses</div>
+    {% for biz in user.businesses.all %}
+    <a href="{% url 'biz_dashboard' slug=biz.slug %}" class="nav-item {% if business.slug == biz.slug %}active{% endif %}">
+      <span class="ni-icon">{{ biz.logo_emoji }}</span> {{ biz.name|truncatechars:18 }}
+    </a>
+    {% endfor %}
+    {% endif %}
+
+    <div class="nav-label">Account</div>
+    <a href="{% url 'business_new' %}" class="nav-item">
+      <span class="ni-icon">＋</span> Add Business
+    </a>
+    <a href="{% url 'profile' %}" class="nav-item">
+      <span class="ni-icon">👤</span> Profile
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <a href="{% url 'profile' %}" class="user-pill">
+      <div class="u-avatar">{{ user.avatar_initials|default:user.email.0|upper }}</div>
+      <div style="flex:1;overflow:hidden">
+        <div class="u-name">{{ user.display_name }}</div>
+        <div class="u-plan">{{ user.plan }} plan</div>
+      </div>
+    </a>
+    <a href="{% url 'logout' %}" class="nav-item" style="margin-top:4px">
+      <span class="ni-icon">↩</span> Sign out
+    </a>
+  </div>
+</aside>
+{% endblock %}
+
+<div class="main">
+  {% block topbar %}
+  <header class="topbar">
+    <div style="font-size:14px;font-weight:600;flex:1">{% block topbar_title %}{% endblock %}</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      {% block topbar_actions %}{% endblock %}
+    </div>
+  </header>
+  {% endblock %}
+
+  <div class="content">
+    <div class="content-inner">
+      {% if messages %}{% for msg in messages %}
+      <div class="alert alert-{% if msg.tags == 'error' %}error{% elif msg.tags == 'warning' %}warning{% elif msg.tags == 'info' %}info{% else %}success{% endif %}" style="margin-bottom:20px">{{ msg }}</div>
+      {% endfor %}{% endif %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="toast"></div>
+<script src="{% static 'js/app.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

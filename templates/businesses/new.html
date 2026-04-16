@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}New Business{% endblock %}
+{% block topbar_title %}Add a New Business{% endblock %}
+
+{% block content %}
+<div style="max-width:600px">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Add a Business</div>
+      <div class="page-sub">Each business gets its own QR codes, reviews and dashboard</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Business Name <span style="color:var(--red)">*</span></label>
+          <input class="form-control" name="name" placeholder="Café Aroma" required autofocus>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category <span style="color:var(--red)">*</span></label>
+          <select class="form-control" name="category" required>
+            {% for cat in categories %}
+            <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">City</label>
+          <input class="form-control" name="city" placeholder="New Delhi">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input class="form-control" name="phone" placeholder="+91 98765 43210" type="tel">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-control" name="email" type="email" placeholder="contact@business.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Logo Emoji</label>
+          <input class="form-control" name="logo_emoji" value="🏪" maxlength="4" style="font-size:20px;text-align:center;width:80px">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <input class="form-control" name="address" placeholder="12 Connaught Place">
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn btn-primary" type="submit">Create Business →</button>
+        <a href="{% url 'dashboard_home' %}" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

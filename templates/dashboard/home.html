@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Dashboard{% endblock %}
+{% block topbar_title %}Overview{% endblock %}
+{% block topbar_actions %}
+  <a href="/r/{{ business.qr_codes.first.token }}/" target="_blank" class="btn btn-secondary btn-sm">▦ Preview QR page</a>
+  <a href="{% url 'qrcodes_page' slug=business.slug %}" class="btn btn-primary btn-sm">+ New QR Code</a>
+{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card c-purple">
+    <div class="stat-label">Total Reviews</div>
+    <div class="stat-value">{{ stats.total|intcomma }}</div>
+    <div class="stat-delta">{{ stats.total_7d }} this week · {{ stats.total_30d }} this month</div>
+  </div>
+  <div class="stat-card c-green">
+    <div class="stat-label">Avg Rating</div>
+    <div class="stat-value">{{ stats.avg_rating|default:"—" }}{% if stats.avg_rating %}★{% endif %}</div>
+    <div class="stat-delta">{{ stats.positive }} positive · {{ stats.neutral }} neutral</div>
+  </div>
+  <div class="stat-card c-amber">
+    <div class="stat-label">Pending Replies</div>
+    <div class="stat-value">{{ stats.pending_replies }}</div>
+    <div class="stat-delta">{{ stats.auto_sent }} auto-sent · {{ stats.sent_replies }} total sent</div>
+  </div>
+  <div class="stat-card c-blue">
+    <div class="stat-label">Gifts Issued</div>
+    <div class="stat-value">{{ stats.gifts_issued }}</div>
+    <div class="stat-delta">{{ stats.gifts_claimed }} claimed · {{ stats.redemption_rate }}% rate</div>
+  </div>
+</div>
+
+<div class="grid-2" style="gap:20px;margin-bottom:20px">
+  <!-- Recent Reviews -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">★ Recent Reviews</div>
+      <a href="{% url 'reviews_list' slug=business.slug %}" class="btn btn-ghost btn-sm">View all →</a>
+    </div>
+    {% for r in recent_reviews %}
+    <div style="padding:12px 0;border-bottom:1px solid var(--border);{% if forloop.last %}border-bottom:none;padding-bottom:0{% endif %}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+        <span style="font-size:14px;font-weight:600;color:var(--text)">{{ r.reviewer_name|default:"Anonymous" }}</span>
+        <span style="color:var(--amber);font-size:12px">{% for i in r.star_range %}★{% endfor %}{% for i in r.empty_star_range %}<span style="color:var(--text3)">★</span>{% endfor %}</span>
+        <span class="badge badge-sm {% if r.sentiment == 'positive' %}badge-green{% elif r.sentiment == 'negative' %}badge-red{% else %}badge-amber{% endif %}">{{ r.sentiment }}</span>
+        {% if r.detected_language != "English" %}<span class="badge badge-sm badge-blue">🌐 {{ r.detected_language }}</span>{% endif %}
+        <span style="font-size:11px;color:var(--text3);margin-left:auto">{{ r.created_at|timesince }} ago</span>
+      </div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:6px">{{ r.review_text|truncatechars:110 }}</p>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        {% if r.auto_reply_sent %}
+          <span class="badge badge-sm badge-purple">💬 {% if r.reply_auto_sent_reason %}⚡ Auto-replied{% else %}Replied{% endif %}</span>
+        {% else %}
+          <a href="{% url 'replies_list' slug=business.slug %}" class="badge badge-sm badge-amber" style="cursor:pointer">⏳ Reply pending</a>
+        {% endif %}
+        {% if r.gift_issued %}<span class="badge badge-sm badge-green">{{ r.gift_issued.icon }} Gift issued</span>{% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty" style="padding:32px 0">
+      <div class="empty-icon">📭</div>
+      <div class="empty-title">No reviews yet</div>
+      <p>Share your QR code to start collecting</p>
+      <a href="{% url 'qrcodes_page' slug=business.slug %}" class="btn btn-primary btn-sm">Get QR Code</a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Right column -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <!-- Rating distribution -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Rating Breakdown</div>
+      </div>
+      {% for d in rating_dist reversed %}
+      <div class="rating-bar-row" style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
+        <span style="font-size:12px;color:var(--text3);width:14px;text-align:right">{{ d.rating }}</span>
+        <div style="flex:1;height:7px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:{{ d.pct }}%;background:{% if d.rating >= 4 %}var(--green){% elif d.rating == 3 %}var(--amber){% else %}var(--red){% endif %};border-radius:4px;transition:width .5s ease"></div>
+        </div>
+        <span style="font-size:11px;color:var(--text3);width:26px;text-align:right">{{ d.count }}</span>
+      </div>
+      {% empty %}
+      <p style="font-size:13px;color:var(--text3);text-align:center;padding:16px 0">No data yet</p>
+      {% endfor %}
+    </div>
+
+    <!-- Reply queue -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">💬 Reply Queue</div>
+        <a href="{% url 'replies_list' slug=business.slug %}" class="btn btn-ghost btn-sm">Manage →</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;padding:4px 0">
+        <div>
+          <div style="font-size:22px;font-weight:700;color:var(--amber)">{{ stats.pending_replies }}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Pending</div>
+        </div>
+        <div>
+          <div style="font-size:22px;font-weight:700;color:var(--green)">{{ stats.sent_replies }}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Sent</div>
+        </div>
+        <div>
+          <div style="font-size:22px;font-weight:700;color:#a5b4fc">{{ stats.auto_sent }}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Auto</div>
+        </div>
+      </div>
+      {% if stats.pending_replies %}
+      <a href="{% url 'replies_list' slug=business.slug %}?f=pending" class="btn btn-primary btn-block btn-sm" style="margin-top:12px">
+        Review {{ stats.pending_replies }} pending repl{{ stats.pending_replies|pluralize:"y,ies" }} →
+      </a>
+      {% else %}
+      <div style="text-align:center;font-size:13px;color:var(--green);padding-top:10px">✓ All caught up!</div>
+      {% endif %}
+    </div>
+
+    <!-- Gift stats -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🎁 Gift Performance</div>
+        <a href="{% url 'gifts_page' slug=business.slug %}" class="btn btn-ghost btn-sm">Manage →</a>
+      </div>
+      {% for g in gift_stats %}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:13px;color:var(--text2)">{{ g.gift_issued__icon }} {{ g.gift_issued__title }}</span>
+        <span class="badge badge-sm badge-purple">{{ g.c }} issued</span>
+      </div>
+      {% empty %}
+      <p style="font-size:13px;color:var(--text3);padding:10px 0">No gifts issued yet</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Top Chips + QR Codes row -->
+<div class="grid-2" style="gap:20px">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">🔑 Top Review Chips</div>
+    </div>
+    <div class="chips">
+      {% for c in top_chips %}
+      <span class="chip readonly">{{ c.chip }} <strong style="color:var(--purple)">{{ c.count }}</strong></span>
+      {% empty %}
+      <p style="font-size:13px;color:var(--text3)">Chips appear once customers start reviewing</p>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">▦ Active QR Codes</div>
+      <a href="{% url 'qrcodes_page' slug=business.slug %}" class="btn btn-ghost btn-sm">All codes →</a>
+    </div>
+    {% for qr in qrcodes %}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border){% if forloop.last %};border-bottom:none{% endif %}">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">{{ qr.label }}</div>
+        <div style="font-size:11px;color:var(--text3)">{{ qr.scan_count }} scans · {{ qr.created_at|date:"d M Y" }}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <span class="badge badge-sm badge-blue">{{ qr.scan_count }} scans</span>
+        <button class="btn btn-ghost btn-sm btn-icon-only" onclick="copyText('{{ qr.review_url }}','URL')" title="Copy URL">📋</button>
+      </div>
+    </div>
+    {% empty %}
+    <div style="text-align:center;padding:16px 0">
+      <p style="font-size:13px;color:var(--text3);margin-bottom:10px">No QR codes yet</p>
+      <a href="{% url 'qrcodes_page' slug=business.slug %}" class="btn btn-primary btn-sm">Generate first QR</a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

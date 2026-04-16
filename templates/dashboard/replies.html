@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Replies{% endblock %}
+{% block topbar_title %}Reply Management{% endblock %}
+{% block topbar_actions %}
+  {% if business.auto_send_positive_replies %}
+  <span class="badge badge-purple">⚡ Auto-send ON for 4-5★</span>
+  {% else %}
+  <span class="badge badge-amber">Auto-send OFF</span>
+  {% endif %}
+  <a href="{% url 'settings_page' slug=business.slug %}" class="btn btn-secondary btn-sm">Configure</a>
+{% endblock %}
+
+{% block content %}
+<!-- Stats strip -->
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
+  <div class="stat-card c-amber">
+    <div class="stat-label">Pending Reply</div>
+    <div class="stat-value">{{ pending_count }}</div>
+  </div>
+  <div class="stat-card c-green">
+    <div class="stat-label">Replies Sent</div>
+    <div class="stat-value">{{ sent_count }}</div>
+  </div>
+  <div class="stat-card c-purple">
+    <div class="stat-label">Auto-Sent</div>
+    <div class="stat-value">{{ auto_count }}</div>
+    <div class="stat-delta">Skipped approval queue</div>
+  </div>
+</div>
+
+<!-- Filter tabs -->
+<div style="display:flex;gap:6px;margin-bottom:20px;background:rgba(255,255,255,.04);padding:4px;border-radius:var(--r2);width:fit-content">
+  <a href="?f=pending" class="btn btn-sm {% if filter == 'pending' %}btn-primary{% else %}btn-ghost{% endif %}">⏳ Pending ({{ pending_count }})</a>
+  <a href="?f=sent"    class="btn btn-sm {% if filter == 'sent'    %}btn-primary{% else %}btn-ghost{% endif %}">✓ Sent ({{ sent_count }})</a>
+  <a href="?f=all"     class="btn btn-sm {% if filter == 'all'     %}btn-primary{% else %}btn-ghost{% endif %}">All</a>
+</div>
+
+{% for r in reviews %}
+<div class="card" style="margin-bottom:14px" id="reply-card-{{ r.id }}">
+  <div class="grid-2" style="gap:20px;align-items:start">
+
+    <!-- Review side -->
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <span style="font-size:15px;font-weight:700;color:var(--text)">{{ r.reviewer_name|default:"Anonymous" }}</span>
+        <span style="color:var(--amber);font-size:13px">{% for i in r.star_range %}★{% endfor %}{% for i in r.empty_star_range %}<span style="color:var(--text3)">★</span>{% endfor %}</span>
+        <span class="badge badge-sm {% if r.sentiment == 'positive' %}badge-green{% elif r.sentiment == 'negative' %}badge-red{% else %}badge-amber{% endif %}">{{ r.get_sentiment_display }}</span>
+        {% if r.detected_language != 'English' %}<span class="badge badge-sm badge-blue">🌐 {{ r.detected_language }}</span>{% endif %}
+        {% if r.reply_auto_sent_reason %}<span class="badge badge-sm badge-purple">⚡ Auto</span>{% endif %}
+      </div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:10px;padding:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r2)">"{{ r.review_text }}"</p>
+      {% if r.selected_chips %}
+      <div class="chips" style="margin-bottom:8px">
+        {% for chip in r.selected_chips %}
+        <span class="chip readonly" style="font-size:11px;padding:3px 9px">{{ chip }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div style="font-size:11px;color:var(--text3)">{{ r.created_at|date:"d M Y, H:i" }} · {{ r.qr_code.label|default:"Direct" }}</div>
+    </div>
+
+    <!-- Reply side -->
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+        AI-Generated Reply
+        {% if r.auto_reply_sent %}
+        <span class="badge badge-sm badge-green">✓ Sent {{ r.auto_reply_sent_at|date:"d M" }}</span>
+        {% endif %}
+      </div>
+
+      {% if not r.auto_reply_sent %}
+      <textarea class="form-control" id="ta-{{ r.id }}" rows="6" style="font-size:13px;line-height:1.6;margin-bottom:10px;font-family:inherit">{{ r.reply_edited_text|default:r.auto_reply_text }}</textarea>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn btn-success btn-sm" onclick="sendReply('{{ r.id }}', this)">✓ Approve &amp; Send</button>
+        <button class="btn btn-secondary btn-sm" onclick="saveReply('{{ r.id }}', this)">💾 Save edits</button>
+        <button class="btn btn-ghost btn-sm" onclick="regenReply('{{ r.id }}', this)">⟳ Regenerate</button>
+      </div>
+      {% else %}
+      <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r2);padding:13px;font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-line">{{ r.reply_edited_text|default:r.auto_reply_text }}</div>
+      {% if r.reply_auto_sent_reason %}
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">{{ r.reply_auto_sent_reason }}</div>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% empty %}
+<div class="empty">
+  <div class="empty-icon">💬</div>
+  <div class="empty-title">
+    {% if filter == 'pending' %}All replies sent — great work!
+    {% elif filter == 'sent' %}No replies sent yet
+    {% else %}No reviews yet{% endif %}
+  </div>
+</div>
+{% endfor %}
+
+{% if reviews.has_other_pages %}
+<div class="pagination">
+  {% if reviews.has_previous %}<a href="?f={{ filter }}&page={{ reviews.previous_page_number }}" class="btn btn-secondary btn-sm">← Prev</a>{% endif %}
+  <span class="page-info">Page {{ reviews.number }} of {{ reviews.paginator.num_pages }}</span>
+  {% if reviews.has_next %}<a href="?f={{ filter }}&page={{ reviews.next_page_number }}" class="btn btn-secondary btn-sm">Next →</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const SLUG = '{{ business.slug }}';
+
+async function sendReply(id, btn) {
+  const text = document.getElementById('ta-' + id)?.value;
+  if (!text?.trim()) { toast('Reply text is empty', 'error'); return; }
+  btnLoading(btn, true);
+  try {
+    await apiPost(`/dashboard/${SLUG}/replies/${id}/save/`, { text });
+    const r = await apiPost(`/dashboard/${SLUG}/replies/${id}/send/`, {});
+    const googleMsg = r.posted_to_google
+      ? ' · Posted to Google Maps ✓'
+      : (r.google_note ? ` · <span style="color:var(--amber)">${r.google_note}</span>` : ' · Saved in dashboard');
+    toast(r.posted_to_google ? 'Reply sent & posted to Google!' : 'Reply approved and saved.');
+    document.getElementById('reply-card-' + id).innerHTML = `
+      <div style="padding:14px 0;font-size:13px;color:var(--green);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span>✓ Reply approved — ${r.sent_at}</span>
+        <span style="font-size:11px;color:var(--text3)">${googleMsg}</span>
+      </div>`;
+  } catch(e) {
+    toast(e.message || 'Failed to send reply', 'error');
+    btnLoading(btn, false);
+  }
+}
+
+async function saveReply(id, btn) {
+  const text = document.getElementById('ta-' + id)?.value;
+  btnLoading(btn, true);
+  try {
+    await apiPost(`/dashboard/${SLUG}/replies/${id}/save/`, { text });
+    toast('Edits saved');
+  } catch(e) {
+    toast('Could not save edits', 'error');
+  }
+  btnLoading(btn, false);
+}
+
+async function regenReply(id, btn) {
+  btnLoading(btn, true);
+  try {
+    const r = await apiPost(`/dashboard/${SLUG}/replies/${id}/regenerate/`, {});
+    if (r.reply) {
+      document.getElementById('ta-' + id).value = r.reply;
+      toast('New reply generated');
+    }
+  } catch(e) {
+    toast('Could not regenerate', 'error');
+  }
+  btnLoading(btn, false);
+}
+</script>
+{% endblock %}

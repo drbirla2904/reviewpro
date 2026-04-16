@@ -1,0 +1,41 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%236366f1'/><text x='16' y='23' text-anchor='middle' font-size='18' font-weight='800' fill='white' font-family='sans-serif'>R</text></svg>">
+<title>{% block title %}ReviewPro{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+<style>
+.auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(99,102,241,.18) 0%,transparent 60%),var(--bg)}
+.auth-card{width:100%;max-width:420px}
+.auth-logo{text-align:center;margin-bottom:32px}
+.auth-logo-mark{width:44px;height:44px;background:linear-gradient(135deg,var(--purple),var(--purple2));border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;margin-bottom:12px}
+.auth-logo-name{font-size:22px;font-weight:700;letter-spacing:-.4px}
+.auth-logo-sub{font-size:13px;color:var(--text2);margin-top:4px}
+.auth-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.auth-box h2{font-size:20px;font-weight:700;margin-bottom:4px}
+.auth-box .auth-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;font-size:12px;color:var(--text3)}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.auth-footer{text-align:center;margin-top:20px;font-size:13px;color:var(--text2)}
+</style>
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">RP</div>
+      <div class="auth-logo-name">ReviewPro</div>
+      <div class="auth-logo-sub">Turn every customer into a Google review</div>
+    </div>
+    {% if messages %}{% for msg in messages %}
+    <div class="alert alert-{% if msg.tags == 'error' %}error{% else %}success{% endif %}" style="margin-bottom:16px">{{ msg }}</div>
+    {% endfor %}{% endif %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+<script src="{% static 'js/app.js' %}"></script>
+</body>
+</html>

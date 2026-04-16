@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Reviews{% endblock %}
+{% block topbar_title %}Reviews{% endblock %}
+{% block topbar_actions %}
+  <form method="get" style="display:flex;gap:8px;align-items:center">
+    <input class="form-control" style="width:220px" name="q" value="{{ query }}" placeholder="Search reviews…">
+    <input type="hidden" name="f" value="{{ filter }}">
+    <button class="btn btn-secondary btn-sm" type="submit">Search</button>
+    {% if query %}<a href="?f={{ filter }}" class="btn btn-ghost btn-sm">✕ Clear</a>{% endif %}
+  </form>
+{% endblock %}
+
+{% block content %}
+<!-- Filter tabs -->
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px">
+  {% for key, label, count in filter_tabs %}
+  <a href="?f={{ key }}{% if query %}&q={{ query }}{% endif %}"
+     class="btn btn-sm {% if filter == key %}btn-primary{% else %}btn-secondary{% endif %}">
+    {{ label }} <span style="opacity:.7;font-weight:400">({{ count }})</span>
+  </a>
+  {% endfor %}
+</div>
+
+{% if reviews.object_list %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Reviewer</th>
+        <th>Rating</th>
+        <th>Review</th>
+        <th>Sentiment</th>
+        <th>Language</th>
+        <th>Gift</th>
+        <th>Reply</th>
+        <th>Date</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in reviews %}
+      <tr>
+        <td class="td-main">{{ r.reviewer_name|default:"Anonymous" }}</td>
+        <td>
+          <span style="color:var(--amber);font-size:12px">{% for i in r.star_range %}★{% endfor %}</span>
+          <span style="color:var(--text3);font-size:12px">{% for i in r.empty_star_range %}★{% endfor %}</span>
+        </td>
+        <td style="max-width:260px">
+          <span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px" title="{{ r.review_text }}">
+            {{ r.review_text|truncatechars:85 }}
+          </span>
+          {% if r.selected_chips %}
+          <div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">
+            {% for chip in r.selected_chips|slice:":3" %}
+            <span style="background:rgba(255,255,255,.04);border:1px solid var(--border);padding:2px 7px;border-radius:20px;font-size:10px;color:var(--text3)">{{ chip }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </td>
+        <td>
+          <span class="badge badge-sm {% if r.sentiment == 'positive' %}badge-green{% elif r.sentiment == 'negative' %}badge-red{% else %}badge-amber{% endif %}">
+            {{ r.get_sentiment_display }}
+          </span>
+        </td>
+        <td style="font-size:12px;color:var(--text2)">{{ r.detected_language }}</td>
+        <td>
+          {% if r.gift_issued %}
+          <span title="{{ r.gift_issued.title }}{% if r.gift_claimed %} · Claimed{% endif %}">
+            {{ r.gift_issued.icon }}
+            {% if r.gift_claimed %}<span class="badge badge-sm badge-green">✓</span>{% endif %}
+          </span>
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if r.auto_reply_sent %}
+            <span class="badge badge-sm {% if r.reply_auto_sent_reason %}badge-purple{% else %}badge-green{% endif %}">
+              {% if r.reply_auto_sent_reason %}⚡ Auto{% else %}✓ Sent{% endif %}
+            </span>
+          {% else %}
+            <span class="badge badge-sm badge-amber">Pending</span>
+          {% endif %}
+        </td>
+        <td class="td-mono" style="white-space:nowrap">{{ r.created_at|date:"d M Y" }}</td>
+        <td>
+          <a href="{% url 'replies_list' slug=business.slug %}?review={{ r.id }}" class="btn btn-ghost btn-sm">Reply</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if reviews.has_other_pages %}
+<div class="pagination">
+  {% if reviews.has_previous %}
+  <a href="?f={{ filter }}&q={{ query }}&page={{ reviews.previous_page_number }}" class="btn btn-secondary btn-sm">← Prev</a>
+  {% endif %}
+  <span class="page-info">Page {{ reviews.number }} of {{ reviews.paginator.num_pages }}</span>
+  {% if reviews.has_next %}
+  <a href="?f={{ filter }}&q={{ query }}&page={{ reviews.next_page_number }}" class="btn btn-secondary btn-sm">Next →</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty">
+  <div class="empty-icon">★</div>
+  <div class="empty-title">No reviews found</div>
+  <p>{% if query %}Try a different search term{% else %}Share your QR code to start collecting reviews{% endif %}</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Build filter tabs from context
+</script>
+{% endblock %}

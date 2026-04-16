@@ -1,0 +1,40 @@
+{% extends "base_auth.html" %}
+{% block title %}Create Account{% endblock %}
+{% block content %}
+<div class="auth-box">
+  <h2>Create your account</h2>
+  <p class="auth-sub">Start collecting Google reviews in minutes — free forever</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">Full name</label>
+      <input class="form-control" type="text" name="full_name" value="{{ form.full_name.value|default:'' }}"
+        placeholder="Rahul Sharma" autofocus required>
+      {% if form.full_name.errors %}<div class="form-error">{{ form.full_name.errors.0 }}</div>{% endif %}
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email address</label>
+      <input class="form-control" type="email" name="email" value="{{ form.email.value|default:'' }}"
+        placeholder="you@company.com" required>
+      {% if form.email.errors %}<div class="form-error">{{ form.email.errors.0 }}</div>{% endif %}
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-control" type="password" name="password1" placeholder="Min 8 chars" required>
+        {% if form.password1.errors %}<div class="form-error">{{ form.password1.errors.0 }}</div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm password</label>
+        <input class="form-control" type="password" name="password2" placeholder="Repeat" required>
+        {% if form.password2.errors %}<div class="form-error">{{ form.password2.errors.0 }}</div>{% endif %}
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block btn-lg" type="submit">Create account →</button>
+    <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:12px">
+      By signing up you agree to our Terms of Service and Privacy Policy.
+    </p>
+  </form>
+</div>
+<div class="auth-footer">Already have an account? <a href="{% url 'login' %}">Sign in</a></div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block topbar_title %}My Profile{% endblock %}
+
+{% block content %}
+<div style="max-width:580px">
+
+  <!-- Avatar + name -->
+  <div class="card" style="margin-bottom:20px;display:flex;align-items:center;gap:20px;padding:24px">
+    <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--purple),var(--purple2));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;flex-shrink:0">
+      {{ user.avatar_initials|default:user.email.0|upper }}
+    </div>
+    <div style="flex:1">
+      <div style="font-size:20px;font-weight:700;margin-bottom:3px">{{ user.display_name }}</div>
+      <div style="font-size:13px;color:var(--text2)">{{ user.email }}</div>
+      <div style="margin-top:8px;display:flex;gap:7px;flex-wrap:wrap">
+        <span class="badge badge-purple">{{ user.plan|title }} Plan</span>
+        <span class="badge badge-green">{{ user.businesses.count }} business{{ user.businesses.count|pluralize:"es" }}</span>
+        <span style="font-size:12px;color:var(--text3)">Joined {{ user.created_at|date:"M Y" }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit profile -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header"><div class="card-title">👤 Personal Information</div></div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-control" name="full_name" value="{{ user.full_name }}" placeholder="Your full name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-control" value="{{ user.email }}" disabled>
+        <div class="form-hint">Email cannot be changed — contact support if needed</div>
+      </div>
+      <button class="btn btn-primary" type="submit">Save Changes</button>
+    </form>
+  </div>
+
+  <!-- Your businesses -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header">
+      <div class="card-title">🏪 Your Businesses</div>
+      <a href="{% url 'business_new' %}" class="btn btn-secondary btn-sm">+ Add Business</a>
+    </div>
+    {% for biz in user.businesses.all %}
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border){% if forloop.last %};border-bottom:none{% endif %}">
+      <div style="width:36px;height:36px;background:var(--surface2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px">{{ biz.logo_emoji }}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600">{{ biz.name }}</div>
+        <div style="font-size:12px;color:var(--text3)">{{ biz.category }}{% if biz.city %} · {{ biz.city }}{% endif %}</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="badge badge-sm badge-blue">{{ biz.total_reviews }} reviews</span>
+        <a href="{% url 'biz_dashboard' slug=biz.slug %}" class="btn btn-ghost btn-sm">Open →</a>
+      </div>
+    </div>
+    {% empty %}
+    <div style="text-align:center;padding:20px 0">
+      <p style="font-size:13px;color:var(--text3);margin-bottom:12px">No businesses yet</p>
+      <a href="{% url 'business_new' %}" class="btn btn-primary btn-sm">Create your first business</a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Account actions -->
+  <div class="card" style="border-color:var(--border)">
+    <div class="card-header"><div class="card-title">⚙ Account</div></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a href="{% url 'logout' %}" class="btn btn-danger btn-sm">Sign Out</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

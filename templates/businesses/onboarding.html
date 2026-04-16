@@ -1,0 +1,72 @@
+{% extends "base_auth.html" %}
+{% block title %}Set Up Your Business{% endblock %}
+{% block content %}
+<div class="auth-box" style="max-width:500px">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <div style="width:36px;height:36px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px">👋</div>
+    <div>
+      <div style="font-size:16px;font-weight:700">Welcome! Let's set up your business</div>
+      <div style="font-size:12px;color:var(--text2)">This takes under 2 minutes</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:24px">
+    {% for step in "123" %}
+    <div style="flex:1;height:3px;border-radius:2px;background:{% if forloop.counter == 1 %}var(--purple){% else %}var(--surface2){% endif %}"></div>
+    {% endfor %}
+  </div>
+
+  <form method="post" action="{% url 'business_new' %}">
+    {% csrf_token %}
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Business Name <span style="color:var(--red)">*</span></label>
+        <input class="form-control" name="name" placeholder="Café Aroma" required autofocus>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category <span style="color:var(--red)">*</span></label>
+        <select class="form-control" name="category" required>
+          <option value="Restaurant">Restaurant</option>
+          <option value="Cafe">Cafe / Coffee Shop</option>
+          <option value="Hotel">Hotel / Resort</option>
+          <option value="Salon">Salon / Spa</option>
+          <option value="Gym">Gym / Fitness</option>
+          <option value="Bakery">Bakery</option>
+          <option value="Bar">Bar / Pub</option>
+          <option value="Clinic">Clinic</option>
+          <option value="Retail">Retail</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">City</label>
+        <input class="form-control" name="city" placeholder="New Delhi">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-control" name="phone" placeholder="+91 98765 43210" type="tel">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Address</label>
+      <input class="form-control" name="address" placeholder="12 Connaught Place">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Business Email</label>
+        <input class="form-control" name="email" type="email" placeholder="contact@business.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Logo Emoji</label>
+        <input class="form-control" name="logo_emoji" value="🏪" maxlength="4" style="font-size:20px;text-align:center">
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block btn-lg" type="submit">Create Business & Go to Dashboard →</button>
+  </form>
+</div>
+<div class="auth-footer" style="margin-top:16px">
+  <a href="{% url 'dashboard_home' %}" style="color:var(--text3)">Skip for now →</a>
+</div>
+{% endblock %}
